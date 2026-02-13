@@ -1,0 +1,7 @@
+.git
+.venv
+reports
+var
+tests
+*.md
+!README.md
