@@ -1,0 +1,9 @@
+# Local development profile (MacBook Air M4 16GB): correctness first, relaxed latency budget
+profile: local_m4
+device: { backend: cpu, nnapi_mps: true }     # use MPS when available on this machine, else CPU
+latency: { budget_ms: 80 }                    # non-target environment; functional gate only
+telemetry:
+  prometheus: { enabled: false }
+features:
+  embedding: { enabled: false }
+  runs: { synthetic_only: true }              # months 1-2: synthetic streams only

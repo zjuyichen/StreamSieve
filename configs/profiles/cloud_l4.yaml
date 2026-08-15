@@ -1,0 +1,4 @@
+# Cloud GPU alternative profile (GCP L4): higher throughput; same parameters as T4
+profile: cloud_l4
+device: { backend: cuda, nvdec: true, gpu: L4 }
+latency: { budget_ms: 45 }

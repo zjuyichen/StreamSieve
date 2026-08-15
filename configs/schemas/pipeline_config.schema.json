@@ -1,0 +1,37 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "streamsieve/pipeline_config.schema.json",
+  "title": "PipelineConfig (core constraint subset)",
+  "type": "object",
+  "required": ["decision", "governance"],
+  "properties": {
+    "pipeline": { "type": "object" },
+    "decision": {
+      "type": "object",
+      "required": ["t_bypass", "t_gray_upper", "t_force",
+                   "bypass_streak_max_frames", "bypass_streak_max_seconds"],
+      "properties": {
+        "t_bypass": { "type": "number", "minimum": 0, "maximum": 0.2 },
+        "t_gray_upper": { "type": "number", "minimum": 0, "maximum": 0.3 },
+        "t_force": { "type": "number", "minimum": 0.05, "maximum": 0.5 },
+        "bypass_streak_max_frames": { "type": "integer", "minimum": 1 },
+        "bypass_streak_max_seconds": { "type": "number", "minimum": 0.1 }
+      }
+    },
+    "governance": {
+      "type": "object",
+      "properties": {
+        "retention": {
+          "type": "object",
+          "properties": {
+            "persist_raw_frames": { "const": false }
+          }
+        },
+        "training": {
+          "type": "object",
+          "properties": { "allowed": { "const": false } }
+        }
+      }
+    }
+  }
+}

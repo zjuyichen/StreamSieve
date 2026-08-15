@@ -1,0 +1,74 @@
+# StreamSieve default configuration (balanced preset baseline)
+profile: balanced
+
+pipeline:
+  stages: [m1, m2, m3, m4, m5, m6, m7]   # declarative stage graph (trimmable, e.g. m1,m2,m4,m5)
+  queue_capacity: 256                     # bounded queue capacity per stage
+  workers_per_stream: 1                   # data-plane work units per stream
+  micro_batch_max: 3                      # max GPU micro-batch (only above the queue-depth trigger)
+  micro_batch_queue_trigger: 8
+
+decision:
+  t_bypass: 0.020          # below: redundant candidate (judged after the adaptive factor)
+  t_gray_upper: 0.060      # gray-zone upper bound
+  t_force: 0.120           # force-review threshold (safety channel; adaptive factor not applied)
+  hysteresis_frames: 2     # gray-zone hysteresis frames
+  scene_cut_threshold: 0.250
+  bypass_streak_max_frames: 150    # safety floor: max consecutive-bypass interval (2.5s @60fps)
+  bypass_streak_max_seconds: 2.5   # safety floor: max bypass interval in time
+  keepalive_every_seconds: 5.0     # keepalive sampling interval
+  overlay_sensitivity: 1.5         # overlay-region weight
+  quadrant_or: true                # quadrant OR logic: any quadrant change counts as a change
+  adaptive:
+    enabled: true
+    alpha: 0.05            # EWMA update rate
+    clamp: [0.5, 2.0]      # adaptive-factor clamp range
+
+features:
+  phash: { size: 32, keep: 8, quadrants: 4 }   # 32x32 -> low 8x8 -> 64-bit; 4 quadrants
+  embedding:                                    # gray-zone cascade second-level feature (optional)
+    enabled: false
+    model: models/mobilenetv3s.onnx            # open-licensed model, logged in the registry
+    timeout_ms: 3
+
+masking:
+  tile_grid: [16, 9]        # textiness tile grid on the 1/8 pyramid
+  textiness_threshold: 0.35
+  overlay_hash_epsilon: 0.02  # region-hash mutation threshold (above -> force-review signal)
+
+similarity:
+  weights: { prev: 0.45, anchor: 0.30, mad: 0.15, ssim: 0.10 }
+
+latency:
+  budget_ms: 45             # end-to-end p99 budget (ingest -> decision)
+  stage_gates_ms: { m1: 12, m2: 6, m3: 5, m4: 5, m5: 2, m6: 3 }
+
+failsafe:
+  watchdog_timeout_ms: 100
+  watchdog_strikes: 3
+  error_rate_window_s: 30
+  error_rate_threshold: 0.01
+  cooldown_s: 30
+  probe_s: 10
+  flap_suppression_s: 60
+
+telemetry:
+  prometheus: { enabled: true, port: 9100 }
+  audit_log: { path: var/audit/session.jsonl, chain_hmac: true }  # key from env/KMS
+  energy: { gpu: nvml, cpu: rapl }        # auto-degrades to estimates (method recorded)
+
+governance:
+  retention:
+    persist_raw_frames: false             # G2: must never be true (runtime assertion)
+    temp_dir_ttl_hours: 24
+    post_eval_purge_business_days: 5      # Rule 6
+  tls: { min_version: "1.3" }             # Rule 3
+  at_rest: { cipher: "AES-256-GCM" }
+  training: { allowed: false }            # G4: runtime guard
+  authz: { scopes: [sandbox.read, sandbox.write] }   # Rule 5
+
+dispatch:
+  adapters: [mock_queue]
+  mock_queue: { endpoint: "http://127.0.0.1:8081/ingest", tls: false, timeout_ms: 200 }
+  retry: { max_attempts: 3, backoff_base_ms: 50 }
+  breaker: { failures: 3, open_s: 30 }

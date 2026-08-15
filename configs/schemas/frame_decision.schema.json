@@ -1,0 +1,23 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "streamsieve/frame_decision.schema.json",
+  "title": "FrameDecision",
+  "type": "object",
+  "required": ["stream_id", "seq", "outcome", "score", "mode", "config_hash",
+               "t_ingest_ns", "t_decision_ns"],
+  "properties": {
+    "stream_id": { "type": "string" },
+    "seq": { "type": "integer", "minimum": 0 },
+    "outcome": { "enum": ["BYPASS", "REVIEW", "FORCE_REVIEW", "SAFETY_FLOOR", "FAILSAFE"] },
+    "score": { "type": "number", "minimum": 0, "maximum": 1 },
+    "reasons": { "type": "array", "items": { "type": "string" } },
+    "mode": { "enum": ["NORMAL", "DEGRADED", "FAILSAFE_BYPASS"] },
+    "overlay_mutation": { "type": "boolean" },
+    "quadrant_max": { "type": "number", "minimum": 0, "maximum": 1 },
+    "config_hash": { "type": "string" },
+    "t_ingest_ns": { "type": "integer" },
+    "t_decision_ns": { "type": "integer" },
+    "latency_ns": { "type": "integer", "minimum": 0 }
+  },
+  "additionalProperties": false
+}

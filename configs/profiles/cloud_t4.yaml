@@ -1,0 +1,12 @@
+# Cloud GPU target profile (GCP T4): the environment for metric gates
+profile: cloud_t4
+device: { backend: cuda, nvdec: true }
+latency: { budget_ms: 45 }                    # hard gate (tests/perf)
+features:
+  embedding: { enabled: true, model: models/mobilenetv3s.onnx }
+telemetry:
+  prometheus: { enabled: true, port: 9100 }
+  energy: { gpu: nvml }
+pipeline:
+  micro_batch_max: 3
+  micro_batch_queue_trigger: 8
