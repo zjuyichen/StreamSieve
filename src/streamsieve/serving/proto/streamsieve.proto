@@ -1,0 +1,35 @@
+syntax = "proto3";
+package streamsieve.v1;
+
+// Sandbox surface: the platform feeds (simulated) streams; Sieve returns per-frame decisions.
+service StreamSieve {
+  // Bidirectional stream: the platform pushes frame metadata/references; Sieve streams back decision records.
+  rpc Ingest(stream IngestRequest) returns (stream DecisionRecord);
+  rpc Health(HealthRequest) returns (HealthResponse);
+  rpc GetMode(ModeRequest) returns (ModeResponse);
+}
+
+message IngestRequest {
+  string stream_id = 1;
+  uint64 seq = 2;
+  int64 pts_ns = 3;
+  // Sandbox: frame_ref points to platform-side shared memory / object storage; StreamSieve never persists raw frames.
+  string frame_ref = 4;
+  bytes decision_context = 5;  // reserved: multimodal signals (Phase II)
+}
+
+message DecisionRecord {
+  string stream_id = 1;
+  uint64 seq = 2;
+  string outcome = 3;        // BYPASS | REVIEW | FORCE_REVIEW | SAFETY_FLOOR | FAILSAFE
+  double score = 4;
+  repeated string reasons = 5;
+  string mode = 6;
+  uint64 latency_ns = 7;
+  string config_hash = 8;
+}
+
+message HealthRequest {}
+message HealthResponse { bool alive = 1; bool ready = 2; }
+message ModeRequest {}
+message ModeResponse { string mode = 1; uint64 failsafe_activations = 2; }

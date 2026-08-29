@@ -1,0 +1,1 @@
+"""StreamSieve: cli."""
