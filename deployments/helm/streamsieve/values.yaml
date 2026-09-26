@@ -1,0 +1,44 @@
+replicaCount: 2
+
+image:
+  repository: ghcr.io/example/streamsieve
+  tag: "0.1.0"
+  pullPolicy: IfNotPresent
+
+gpu:
+  enabled: true
+  type: nvidia.com/gpu        # T4/L4 node pool
+  count: 1
+
+resources:
+  requests: { cpu: "2", memory: "4Gi" }
+  limits:   { cpu: "4", memory: "8Gi" }
+
+probes:
+  liveness:  { path: /v1/healthz, initialDelaySeconds: 10, periodSeconds: 10 }
+  readiness: { path: /v1/readyz,  initialDelaySeconds: 5,  periodSeconds: 5 }
+
+prometheus:
+  annotations: true
+  port: 9100
+
+autoscaling:
+  enabled: true
+  minReplicas: 2
+  maxReplicas: 10
+  metrics:
+    - type: Pods   # custom metrics: sieve_queue_depth / sieve_stage_latency_seconds
+      pods:
+        metric: { name: sieve_queue_depth }
+        target: { type: AverageValue, averageValue: "64" }
+
+env:
+  - name: SIEVE_AUDIT_KEY
+    valueFrom:
+      secretKeyRef: { name: streamsieve-audit, key: hmac }
+
+# audit-log mount (WORM / append-only storage)
+persistence:
+  enabled: true
+  mountPath: /var/audit
+  size: 10Gi

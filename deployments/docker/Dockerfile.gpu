@@ -1,0 +1,16 @@
+# StreamSieve GPU image (GCP T4/L4: NVDEC + onnxruntime-gpu)
+FROM nvidia/cuda:12.4.1-runtime-ubuntu22.04
+ENV PYTHONDONTWRITEBYTECODE=1 PYTHONUNBUFFERED=1 DEBIAN_FRONTEND=noninteractive
+RUN apt-get update && apt-get install -y --no-install-recommends \
+    python3.11 python3-pip ffmpeg libgl1 \
+    && rm -rf /var/lib/apt/lists/*
+WORKDIR /app
+COPY pyproject.toml README.md ./
+COPY src ./src
+COPY configs ./configs
+RUN pip3 install --no-cache-dir ".[video,serving,telemetry,gpu]"
+ENV PYTHONPATH=/app/src
+EXPOSE 8080 9100
+HEALTHCHECK CMD python3 -c "import urllib.request;urllib.request.urlopen('http://127.0.0.1:8080/v1/healthz')" || exit 1
+ENTRYPOINT ["python3", "-m", "streamsieve.cli.main"]
+CMD ["run", "--config", "configs/default.yaml", "--profile", "configs/profiles/cloud_t4.yaml"]

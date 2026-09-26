@@ -1,0 +1,23 @@
+# StreamSieve CPU image (development / demo / reference implementation)
+FROM python:3.11-slim AS base
+ENV PYTHONDONTWRITEBYTECODE=1 PYTHONUNBUFFERED=1
+RUN apt-get update && apt-get install -y --no-install-recommends ffmpeg \
+    && rm -rf /var/lib/apt/lists/*
+
+FROM base AS build
+WORKDIR /app
+COPY pyproject.toml README.md ./
+COPY src ./src
+RUN pip install --no-cache-dir ".[video,serving,telemetry]"
+
+FROM base AS runtime
+WORKDIR /app
+COPY --from=build /usr/local/lib/python3.11/site-packages /usr/local/lib/python3.11/site-packages
+COPY --from=build /usr/local/bin /usr/local/bin
+COPY src ./src
+COPY configs ./configs
+ENV PYTHONPATH=/app/src
+EXPOSE 8080 9100
+HEALTHCHECK CMD python -c "import urllib.request;urllib.request.urlopen('http://127.0.0.1:8080/v1/healthz')" || exit 1
+ENTRYPOINT ["python", "-m", "streamsieve.cli.main"]
+CMD ["run", "--config", "configs/default.yaml"]

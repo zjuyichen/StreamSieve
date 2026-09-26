@@ -1,0 +1,6 @@
+apiVersion: v2
+name: streamsieve
+description: High-Efficiency AI Governance & Computational Optimization Framework (stream safety pre-filter)
+type: application
+version: 0.1.0
+appVersion: "0.1.0"
