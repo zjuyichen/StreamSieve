@@ -1,9 +1,5 @@
 # StreamSieve
 
-[License](https://www.google.com/search?q=LICENSE)
-[](https://github.com/zjuyichen/StreamSieve/releases)
-[Python](https://www.google.com/search?q=pyproject.toml)
-[NIST AI RMF](https://www.google.com/search?q=docs/nist_ai_rmf_mapping.md)
 
 **High-Efficiency AI Governance & Sustainable Computational Optimization Framework**  
 *An adaptive, sub-45ms pre-filtering middleware and NIST-aligned benchmarking suite for live-video safety pipelines.*
